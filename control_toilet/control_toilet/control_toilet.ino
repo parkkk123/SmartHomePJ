@@ -12,7 +12,7 @@
 #include <Time.h>
 
 // Set to true to define Relay as Normally Open (NO)
-#define     true
+#define RELAY_NO    true
 
 // Set number of relays
 #define NUM_RELAYS  1
