@@ -21,15 +21,15 @@
 int relayGPIOs[NUM_RELAYS] = {5};
 
 // Replace with your network credentials
-const char* ssid = ".I'm my father_2.4G";
+const char* ssid = ".pim_2.4G";
 const char* password = "pwcpp1234";
 
 
 //Static IP address configuration
-IPAddress staticIP(192, 168, 0, 51); //ESP static ip
-IPAddress gateway(192, 168, 0, 1);   //IP Address of your WiFi Router (Gateway)
+IPAddress staticIP(192, 168, 1, 51); //ESP static ip
+IPAddress gateway(192, 168, 1, 1);   //IP Address of your WiFi Router (Gateway)
 IPAddress subnet(255, 255, 255, 0);  //Subnet mask
-IPAddress dns(192, 168, 0, 1);  //DNS
+IPAddress dns(192, 168, 1, 1);  //DNS
 const char* deviceName = "Lighting #2";
 
 const char* PARAM_INPUT_1 = "relay";
@@ -59,8 +59,6 @@ int dst = 0; //กำหนดค่า Date Swing Time
 const int digitalPinMotionSensor = D8;
 /////////////////////////////////////////////////////////////////////////// End Motion Sensor  //////////////////////////////////////////////////////
 
-
-String messagePrint = "";
 
 long microsecondsToCentimeters(long microseconds)
 {
@@ -128,7 +126,7 @@ String processor(const String& var){
     
     ultrasonic_distance = microsecondsToCentimeters(duration);
     
-    return "<br><br> Max distance sensor : "+ String(max_Ultrasonic1) +" cm. , Time system is " + String(p_tm->tm_hour) +"<br> Lastest distance : " + String(ultrasonic_distance) + ", Status Motion : " + String(digitalRead(digitalPinMotionSensor)) + "<br> Message : " + messagePrint;
+    return "<br><br> Max distance sensor : "+ String(max_Ultrasonic1) +" cm. , Time system is " + String(p_tm->tm_hour) +"<br> Lastest distance : " + String(ultrasonic_distance);
   }
   return String();
 }
@@ -174,7 +172,7 @@ void setup(){
   WiFi.config(staticIP,dns, gateway, subnet);
   WiFi.begin(ssid, password);
 
-  Serial.println("V1.2");
+  Serial.println("V1.3");
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -276,12 +274,9 @@ void setup(){
 }
 
 int stateMachine = -1;
-int readMotion = 0;
 long duration;
 long cm_1;
 
-int countDownMax = 25;
-int tempCountDown = 0;
 void loop() {
  
   delay(100);
@@ -297,9 +292,6 @@ void loop() {
   cm_1 = microsecondsToCentimeters(duration);
   
   Serial.println("cm_1 : " + String(cm_1));
-  messagePrint = "cm_1 : " + String(cm_1);
-  
-  
 
   //แสดงเวลาปัจจุบัน
 
@@ -308,16 +300,10 @@ void loop() {
    struct tm* p_tm = localtime(&now);
 
    Serial.println("Show time now : " + String(p_tm->tm_hour) + " hr");
-   //&& (p_tm->tm_hour >= 18 || p_tm->tm_hour <= 6)
   if(stateMachine==-1  ){
     if(cm_1 < (max_Ultrasonic1*0.8) && (p_tm->tm_hour >= 18 || p_tm->tm_hour < 6)){
       stateMachine = 0;
       Serial.println("Found one pass #-1");
-      messagePrint = "Found one pass #-1";
-    }else if(digitalRead(digitalPinMotionSensor) && (p_tm->tm_hour >= 18 || p_tm->tm_hour < 6)){
-      stateMachine = 0;
-      Serial.println("Found one pass #-1 with special condition");
-      messagePrint = "Found one pass #-1 with special condition";
     }
   }
 
@@ -325,49 +311,16 @@ void loop() {
     digitalWrite(relayGPIOs[0], 0);
     stateMachine = 1;
     Serial.println("Light on #0");
-    messagePrint = "Light on #0";
   }
   
   if(stateMachine==1){
     Serial.println("Check one #1");
-    //24s delay of motion sensor 
-    readMotion = digitalRead(digitalPinMotionSensor);
-    Serial.println("Status Motion (0: No Move,1: Moved) : " + String(readMotion));
-    messagePrint = "Status Motion (0: No Move,1: Moved) : " + String(readMotion);
-    if(readMotion && (tempCountDown <= 15)){
-      stateMachine = 2;
-      tempCountDown = 0;
-    }else{
-      if(tempCountDown <= 15){
-        tempCountDown = tempCountDown + 1;
-        delay(1000);
-      }else{
-        tempCountDown = 0;
-        stateMachine = 3;
-      }
-    }
+    delay(180000);
+    stateMachine = 2;
   }
 
   if(stateMachine==2){
-    readMotion = digitalRead(digitalPinMotionSensor);
-    Serial.println("Still alive : " + String(readMotion));
-    messagePrint = "Still alive : " + String(readMotion);
-    if(readMotion){
-      tempCountDown = 0;
-    }
-    if(tempCountDown <= 25){
-      tempCountDown = tempCountDown + 1;
-      delay(1000);
-    }else{
-      tempCountDown = 0;
-      stateMachine = 3;
-    }
-    
-  }
-
-  if(stateMachine==3){
     Serial.println("Reset #2");
-    messagePrint = "Reset #2";
     digitalWrite(relayGPIOs[0], 1);
     stateMachine = -1;
   }

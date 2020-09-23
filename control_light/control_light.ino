@@ -20,15 +20,15 @@
 int relayGPIOs[NUM_RELAYS] = {5};
 
 // Replace with your network credentials
-const char* ssid = ".I'm my father_2.4G";
+const char* ssid = ".pim_2.4G";
 const char* password = "pwcpp1234";
 
 
 //Static IP address configuration
-IPAddress staticIP(192, 168, 0, 51); //ESP static ip
-IPAddress gateway(192, 168, 0, 1);   //IP Address of your WiFi Router (Gateway)
+IPAddress staticIP(192, 168, 1, 50); //ESP static ip
+IPAddress gateway(192, 168, 1, 1);   //IP Address of your WiFi Router (Gateway)
 IPAddress subnet(255, 255, 255, 0);  //Subnet mask
-IPAddress dns(192, 168, 0, 1);  //DNS
+IPAddress dns(192, 168, 1, 1);  //DNS
 const char* deviceName = "Lighting #2";
 
 const char* PARAM_INPUT_1 = "relay";
